@@ -1,0 +1,299 @@
+/* Importa una fuente de Google Fonts para un mejor look and feel */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+/* --- Estilos Generales --- */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #2c3e50; /* Azul oscuro */
+    color: #ecf0f1; /* Gris claro */
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center; /* Centra el contenido del body */
+    min-height: 100vh;
+}
+
+h1 {
+    color: #f1c40f; /* Amarillo */
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+h2, h3 {
+    color: #3498db; /* Azul */
+}
+
+/* --- Contenedores Principales --- */
+#welcome-screen,
+#host-screen,
+#player-screen,
+#game-lobby,
+#game-screen {
+    background-color: #34495e; /* Azul más claro */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    margin-bottom: 20px;
+    text-align: center; /* Centra el contenido dentro de los contenedores */
+}
+
+/* --- Botones --- */
+button {
+    background-color: #e74c3c; /* Rojo */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+}
+
+button:hover {
+    background-color: #c0392b; /* Rojo más oscuro */
+}
+
+button:disabled {
+    background-color: #95a5a6; /* Gris */
+    cursor: not-allowed;
+}
+
+/* --- Campos de Entrada --- */
+#answer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+#answer-section input {
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+}
+
+#answer-section button {
+    margin-top: 10px;
+    width: 100%;
+    max-width: 300px;
+}
+
+
+input[type="text"], input[type="password"] {
+    width: calc(100% - 24px); /* Ancho completo - padding */
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #7f8c8d;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    font-size: 1em;
+    text-align: center; /* Centra el texto dentro de los inputs */
+}
+
+/* --- Listas y Jugadores --- */
+#players-list, #score-list, #final-scores-list {
+    list-style: none;
+    padding: 0;
+    text-align: center; /* Centra el contenido de las listas */
+}
+
+#players-list li, #final-scores-list li {
+    background-color: #2c3e50;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#players-list li {
+    text-align: center;
+}
+
+/* --- Mensajes de estado --- */
+#join-status {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* --- Modo de Selección --- */
+.mode-selection {
+    margin-top: 20px;
+}
+
+.mode-selection button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+}
+
+/* --- Botones de Control Centrados --- */
+#host-controls,
+#round-control-buttons,
+#host-lobby-controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; 
+    gap: 10px; 
+    margin-top: 20px; /* Añadido margen superior */
+}
+#start-game-btn {
+    margin: 20px auto;
+}
+
+/* --- Modal de Puntuaciones Finales --- */
+#final-scores-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #34495e;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center; /* Centra el contenido del modal */
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.close-button {
+    color: #ecf0f1;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #f1c40f;
+    text-decoration: none;
+}
+
+#final-scores-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin-top: 20px;
+}
+
+#final-scores-list li {
+    background-color: #2c3e50;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* --- Seccion de Puntuaciones (reglas) --- */
+#points-display {
+    background-color: #2c3e50; /* Color más oscuro */
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 15px;
+    text-align: left; /* Asegurar alineación a la izquierda */
+}
+
+#points-display h3 {
+    color: #f1c40f; /* Título en amarillo */
+    margin-top: 0;
+}
+
+.points-list {
+    margin-top: 5px;
+}
+.points-list p {
+    margin: 5px 0;
+}
+
+/* Oculta completamente el reproductor de audio del anfitrión */
+#audio-player-host {
+    display: none;
+}
+
+/* Estilos de la barra de progreso (visualizador) */
+#host-timer-container,
+#timer-container {
+    background-color: #2c3e50;
+    height: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+#host-timer-bar,
+#timer-bar {
+    height: 100%;
+    background-color: #3498db;
+    width: 0;
+    transition: width 0s linear;
+}
+
+/* Estilos para el visualizador del jugador */
+.audio-visualizer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 50px;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+.bar {
+    width: 8px;
+    background-color: #3498db;
+    animation: bounce 1s linear infinite;
+}
+.bar:nth-child(2) { animation-delay: 0.2s; }
+.bar:nth-child(3) { animation-delay: 0.4s; }
+.bar:nth-child(4) { animation-delay: 0.6s; }
+.bar:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes bounce {
+    0%, 100% { height: 10px; }
+    50% { height: 40px; }
+}
+
+/* --- Responsividad --- */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    #welcome-screen,
+    #host-screen,
+    #player-screen,
+    #game-lobby,
+    #game-screen {
+        padding: 20px;
+    }
+
+    button, input {
+        font-size: 0.9em;
+    }
+}

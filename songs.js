@@ -1,0 +1,70 @@
+// songs.js
+
+const songs = [
+    // 80s / 90s
+    { title: 'Billie Jean', artist: 'Michael Jackson', file: 'michael_jackson_billie_jean.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Bohemian Rhapsody', artist: 'Queen', file: 'queen_bohemian_rhapsody.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'We Will Rock You', artist: 'Queen', file: 'queen_we_will_rock_you.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Don’t Stop Me Now', artist: 'Queen', file: 'queen_dont_stop_me_now.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Livin’ on a Prayer', artist: 'Bon Jovi', file: 'bon_jovi_livin_on_a_prayer.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Sweet Child O’ Mine', artist: 'Guns N’ Roses', file: 'guns_roses_sweet_child_o_mine.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Smells Like Teen Spirit', artist: 'Nirvana', file: 'nirvana_smells_like_teen_spirit.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'I Don’t Want to Miss a Thing', artist: 'Aerosmith', file: 'aerosmith_i_dont_want_to_miss_a_thing.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Like a Prayer', artist: 'Madonna', file: 'madonna_like_a_prayer.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Every Breath You Take', artist: 'The Police', file: 'the_police_every_breath_you_take.mp3', fragmentDurations: [3, 5, 7, 10]},
+    
+    { title: 'Love Me Again', artist: 'John Newman', file: 'john_newman_love_me_again.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Obsesionario En La Mayor', artist: 'Tan Bionica', file: 'tan_bionica_obsesionario_en_la_mayor.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Ciudad Mágica', artist: 'Tan Bionica', file: 'tan_bionica_ciudad_magica.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Bad Habits', artist: 'Ed Sheeran', file: 'ed_sheeran_bad_habits.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Waiting For Love', artist: 'Avicii', file: 'avicii_waiting_for_love.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Sugar', artist: 'Maroon 5', file: 'maroon_5_sugar.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Feel Good', artist: 'Gorillaz', file: 'gorillaz_feel_good.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Lose Control', artist: 'Teddy Swims', file: 'teddy_swims_lose_control.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'All Star', artist: 'Smash Mouth', file: 'smash_mouth_all_star.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Boulevard Of Broken Dreams', artist: 'Green Day', file: 'green_day_boulevard_of_broken_dreams.mp3', fragmentDurations: [3, 5, 7, 10]},
+    
+    { title: 'Bad', artist: 'David Guetta', file: 'david_guetta_bad.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Sweater Weather', artist: 'The Neighbourhood', file: 'the_neighbourhood_sweater_weather.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'The Line', artist: 'Twenty One Pilots', file: 'twenty_one_pilots_the_line.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Californication', artist: 'Red Hot Chili Peppers', file: 'red_hot_chili_peppers_californication.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Sweet Dreams', artist: 'Eurythmics', file: 'eurythmics_sweet_dreams.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'I Was Made For Lovin’ You', artist: 'Kiss', file: 'kiss_i_was_made_for_lovin_you.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Smooth Criminal', artist: 'Michael Jackson', file: 'michael_jackson_smooth_criminal.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Sugar', artist: 'Robin Schulz', file: 'robin_schulz_sugar.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Mentía', artist: 'Miranda', file: 'miranda_mentía.mp3', fragmentDurations: [3, 5, 7, 10]},
+    
+    { title: 'Circles', artist: 'Post Malone', file: 'post_malone_circles.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Stressed Out', artist: 'Twenty One Pilots', file: 'twenty_one_pilots_stressed_out.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Blinding Lights', artist: 'The Weeknd', file: 'the_weeknd_blinding_lights.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Counting Stars', artist: 'OneRepublic', file: 'oneRepublic_counting_stars.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'STAY', artist: 'Kid LAROI', file: 'kid_laroi_stay.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'American Idiot', artist: 'Green Day', file: 'green_day_american_idiot.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'No Money', artist: 'Galantis', file: 'galantis_no_money.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Play Hard', artist: 'David Guetta', file: 'david_guetta_play_hard.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Rap God', artist: 'Eminem', file: 'eminem_rap_god.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Lose Yourself', artist: 'Eminem', file: 'eminem_lose_yourself.mp3', fragmentDurations: [3, 5, 7, 10]},
+    
+    { title: 'LA PLENA', artist: 'Beéle', file: 'beele_la_plena.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Bandolero', artist: 'Don Omar ft. Tego Calderon', file: 'don_omar_tego_calderon_bandolero.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Ella y Yo', artist: 'Aventura', file: 'aventura_ella_y_yo.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Torero', artist: 'Chayanne', file: 'chayanne_torero.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Ahora te puedes marchar', artist: 'Luis Miguel', file: 'luis_miguel_ahora_te_puedes_marchar.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'HOLA PERDIDA', artist: 'Luck Ra', file: 'luck_ra_hola_perdida.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'YA NO VUELVAS', artist: 'La Konga, Luck Ra, Ke Personajes', file: 'luck_ra_ya_no_vuelvas.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'LA MOROCHA', artist: 'Luck Ra, BM', file: 'luck_ra_la_morocha.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Nena', artist: 'Marama', file: 'marama_nena.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'WHERE SHE GOES', artist: 'Bad Bunny', file: 'bad_bunny_where_she_goes.mp3', fragmentDurations: [3, 5, 7, 10]},
+
+    { title: 'Punto G', artist: 'Quevedo', file: 'quevedo_punto_G.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Radioactive', artist: 'Imagine Dragons', file: 'imagine_dragons_radioactive.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Bangarang', artist: 'SKRILLEX', file: 'skrillex_bangarang.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'In The End', artist: 'Linkin Park', file: 'linkin_park_in_the_end.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Bring Me To Life', artist: 'Evanescence', file: 'evanescence_bring_me_to_life.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Campanas en la noche', artist: 'Los Tipitos', file: 'los_tipitos_campanas_en_la_noche.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Brujeri­a', artist: 'Los Tipitos', file: 'los_tipitos_brujeria.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Brujeri­a', artist: 'Los Tipitos', file: 'los_tipitos_brujeria.mp3', fragmentDurations: [3, 5, 7, 10]},
+];
+
+// Exporta el array para que pueda ser importado en otros archivos
+module.exports = songs;

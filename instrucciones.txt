@@ -1,0 +1,7 @@
+cd C:\Users\Martin_Alvarez\Desktop\guess the song
+
+node server.js
+
+para reiniciar ctrl + c
+
+y de vuelta node server.js

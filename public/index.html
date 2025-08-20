@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adivina la Canción</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="feedback-message"></div>
+    <div id="final-scores-modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Top 3 de la Partida</h2>
+            <ul id="final-scores-list"></ul>
+            <button id="end-game-return-btn">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <div id="welcome-screen" class="container">
+        <h1>¡Adivina la Canción!</h1>
+        <p>Selecciona tu rol:</p>
+        <button id="host-btn">Crear Partida (Anfitrión)</button>
+        <button id="player-btn">Unirse a Partida (Jugador)</button>
+    </div>
+
+    <div id="host-screen" class="container" style="display:none;">
+        <h1>Crear Partida</h1>
+        <p>Selecciona el modo de juego:</p>
+        <div class="mode-selection">
+            <button id="fragments-btn">Fragmentos de Canción</button>
+            <button id="instruments-btn">Instrumentos</button>
+        </div>
+    </div>
+
+    <div id="player-screen" class="container" style="display:none;">
+        <h1>Unirse a una Partida</h1>
+        <input type="text" id="name-input" placeholder="Ingresa tu nombre" autocomplete="off">
+        <input type="text" id="code-input" placeholder="Ingresa el código de la partida" autocomplete="off">
+        <button id="join-btn">Unirse</button>
+        <p id="join-status"></p>
+    </div>
+
+    <div id="game-lobby" class="container" style="display:none;">
+        <h1>Partida de Adivinanzas</h1>
+        <h2 id="game-code"></h2>
+        
+        <div id="host-lobby-controls" style="display: none;">
+            <button id="start-game-btn">Comenzar Juego</button>
+            <div id="round-control-buttons" style="display: none;">
+                <button id="next-round-btn">Siguiente Ronda</button>
+                <button id="end-game-btn">Finalizar Juego</button>
+            </div>
+        </div>
+        
+        <div id="player-lobby-message" style="display: none;">
+            <h3>Esperando al Anfitrión...</h3>
+        </div>
+
+        <h3>Jugadores</h3>
+        <ul id="players-list"></ul>
+    </div>
+
+    <div id="game-screen" class="container" style="display:none;">
+        <h1 id="game-title">¿Qué canción es?</h1>
+        <div id="audio-controls">
+            <div id="host-controls" style="display: none;">
+                <button id="play-3s-btn" data-duration="3">3s</button>
+                <button id="play-5s-btn" data-duration="5">5s</button>
+                <button id="play-7s-btn" data-duration="7">7s</button>
+                <button id="play-full-btn">Completa</button>
+                <button id="end-round-btn">Terminar Ronda</button>
+            </div>
+            
+            <div id="host-audio-container" style="display:none;">
+                <audio id="audio-player-host"></audio>
+                <div id="host-timer-container">
+                    <div id="host-timer-bar"></div>
+                </div>
+            </div>
+
+            <div id="player-audio-container" style="display: none;">
+                <div class="audio-visualizer">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <div id="timer-container">
+                    <div id="timer-bar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="answer-section">
+            <input type="text" id="answer-input" placeholder="Título y artista" autocomplete="off">
+            <button id="submit-answer-btn">Enviar</button>
+        </div>
+        
+        <div id="points-display">
+            <h3>Puntuaciones</h3>
+            <div class="points-list">
+                <p>Acierto de título y/o artista en 3s: 100 puntos</p>
+                <p>Acierto de título y/o artista en 5s: 70 puntos</p>
+                <p>Acierto de título y/o artista en 7s: 50 puntos</p>
+                <p>Acierto de título y/o artista en 10s: 30 puntos</p>
+                <p>Acierto solo de artista (en cualquier momento): 50% de los puntos</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
