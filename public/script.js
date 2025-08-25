@@ -3,9 +3,12 @@
 const socket = io();
 
 let isHost = false;
+let myGameCode = null;
 
+// Elementos de la interfaz de usuario
+const passwordScreen = document.getElementById('password-screen');
 const welcomeScreen = document.getElementById('welcome-screen');
-const hostScreen = document.getElementById('host-screen');
+const hostCreationScreen = document.getElementById('host-creation-screen');
 const playerScreen = document.getElementById('player-screen');
 const gameLobby = document.getElementById('game-lobby');
 const gameScreen = document.getElementById('game-screen');
@@ -16,8 +19,13 @@ const finalScoresList = document.getElementById('final-scores-list');
 const closeFinalScoresBtn = document.querySelector('.close-button');
 const endGameReturnBtn = document.getElementById('end-game-return-btn');
 
+const hostPasswordInput = document.getElementById('host-password-input');
+const submitPasswordBtn = document.getElementById('submit-password-btn');
+const togglePasswordBtn = document.getElementById('toggle-password');
+
 const hostBtn = document.getElementById('host-btn');
 const playerBtn = document.getElementById('player-btn');
+const endSessionBtn = document.getElementById('end-session-btn');
 
 const fragmentsBtn = document.getElementById('fragments-btn');
 const instrumentsBtn = document.getElementById('instruments-btn');
@@ -54,13 +62,18 @@ const timerBar = document.getElementById('timer-bar');
 const answerInput = document.getElementById('answer-input');
 const submitBtn = document.getElementById('submit-answer-btn');
 
+const equalizer = document.getElementById('equalizer');
+
 function showScreen(screen) {
+    passwordScreen.style.display = 'none';
     welcomeScreen.style.display = 'none';
-    hostScreen.style.display = 'none';
+    hostCreationScreen.style.display = 'none';
     playerScreen.style.display = 'none';
     gameLobby.style.display = 'none';
     gameScreen.style.display = 'none';
-    screen.style.display = 'block';
+    if (screen) {
+        screen.style.display = 'block';
+    }
 }
 
 function showFeedback(message) {
@@ -92,18 +105,34 @@ function updatePlayersList(players) {
     }
 }
 
-if (hostBtn) {
-    hostBtn.addEventListener('click', () => {
-        isHost = true;
-        showScreen(hostScreen);
+submitPasswordBtn.addEventListener('click', () => {
+    const password = hostPasswordInput.value;
+    socket.emit('submit_host_password', password);
+});
+
+if (togglePasswordBtn) {
+    togglePasswordBtn.addEventListener('click', () => {
+        const type = hostPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        hostPasswordInput.setAttribute('type', type);
+        const icon = togglePasswordBtn.querySelector('i');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
     });
 }
-if (playerBtn) {
-    playerBtn.addEventListener('click', () => {
-        isHost = false;
-        showScreen(playerScreen);
-    });
-}
+
+endSessionBtn.addEventListener('click', () => {
+    socket.emit('end_host_session');
+});
+
+hostBtn.addEventListener('click', () => {
+    isHost = true;
+    showScreen(hostCreationScreen);
+});
+
+playerBtn.addEventListener('click', () => {
+    isHost = false;
+    showScreen(playerScreen);
+});
 
 if (fragmentsBtn) {
     fragmentsBtn.addEventListener('click', () => {
@@ -196,14 +225,64 @@ if (endGameReturnBtn) {
 }
 
 
+// Eventos del servidor
+socket.on('session_status', (data) => {
+    if (data.isActive) {
+        showScreen(welcomeScreen);
+        if (isHost) {
+            endSessionBtn.style.display = 'block';
+        }
+    } else {
+        showScreen(passwordScreen);
+        endSessionBtn.style.display = 'none';
+    }
+});
+
+socket.on('password_incorrect', () => {
+    showFeedback('Contraseña incorrecta.');
+});
+
+socket.on('creation_failed', (message) => {
+    showFeedback(message);
+    showScreen(welcomeScreen);
+});
+
 socket.on('game_created', (data) => {
     isHost = true;
+    myGameCode = data.code;
     showScreen(gameLobby);
     gameCodeDisplay.textContent = `Código de la partida: ${data.code}`;
     hostLobbyControls.style.display = 'block';
     playerLobbyMessage.style.display = 'none';
     startBtn.style.display = 'block';
     roundControlButtons.style.display = 'none';
+});
+
+// NUEVO EVENTO PARA MANEJAR RECONEXIÓN
+socket.on('rejoined_game', (data) => {
+    isHost = false;
+    myGameCode = data.code;
+    
+    // Si la partida ya ha comenzado
+    if (data.state === 'playing') {
+        showScreen(gameScreen);
+        hostControls.style.display = 'none';
+        hostAudioContainer.style.display = 'none';
+        playerAudioContainer.style.display = 'block';
+        answerInput.style.display = 'block';
+        submitBtn.style.display = 'block';
+        answerInput.disabled = false;
+        submitBtn.disabled = false;
+        showFeedback(`Te has reconectado a la partida ${myGameCode}.`);
+    } else { // Si la partida aún está en el lobby
+        showScreen(gameLobby);
+        hostLobbyControls.style.display = 'none';
+        playerLobbyMessage.style.display = 'block';
+        gameCodeDisplay.textContent = `Código de la partida: ${myGameCode}`;
+        showFeedback(`Te has reconectado a la sala de espera de la partida ${myGameCode}.`);
+    }
+
+    updatePlayersList(data.players);
 });
 
 socket.on('player_joined', (players) => {
@@ -244,6 +323,10 @@ socket.on('play_audio', (data) => {
     const audioFilePath = `/audio/${data.file}`;
     const duration = data.duration === 'full' ? 9999 : data.duration;
     
+    if (!isHost) {
+        equalizer.style.display = 'flex';
+    }
+
     if (isHost) {
         hostAudioPlayer.src = audioFilePath;
         hostAudioPlayer.play();
@@ -261,7 +344,15 @@ socket.on('play_audio', (data) => {
             hostTimerBar.style.width = '0%';
         }, 100);
     } else {
-        // Para jugadores, solo actualiza la barra de progreso sin reproducir sonido
+        audioPlayerPlayer.src = audioFilePath;
+        audioPlayerPlayer.play();
+        
+        if (data.duration !== 'full') {
+            setTimeout(() => {
+                audioPlayerPlayer.pause();
+            }, duration * 1000);
+        }
+        
         if (timerBar) {
             timerBar.style.transition = 'width 0s';
             timerBar.style.width = '100%';
@@ -275,7 +366,7 @@ socket.on('play_audio', (data) => {
 
 socket.on('correct_answer', (data) => {
     if (!isHost) {
-        showFeedback(`¡Alguien adivinó la canción!`);
+        showFeedback(`¡${data.player} adivinó la canción!`);
     }
     updatePlayersList(data.players);
 });
@@ -287,6 +378,7 @@ socket.on('round_ended', (data) => {
         roundControlButtons.style.display = 'flex';
     } else {
         showFeedback(`La ronda ha terminado. La canción era: "${data.answer}"`);
+        equalizer.style.display = 'none';
     }
     
     showScreen(gameLobby);
@@ -300,6 +392,8 @@ socket.on('round_summary', (data) => {
         showFeedback(`¡Alguien adivinó! La canción era: "${data.answer}"`);
         startBtn.style.display = 'none';
         roundControlButtons.style.display = 'flex';
+    } else {
+        equalizer.style.display = 'none';
     }
     
     showScreen(gameLobby);
@@ -326,7 +420,7 @@ socket.on('already_answered', () => {
 
 socket.on('game_ended', (data) => {
     showFeedback('¡La partida ha terminado!');
-    const sortedPlayers = Object.values(data.players).sort((a, b) => b.score - a.score);
+    const sortedPlayers = data.players.sort((a, b) => b.score - a.score);
     finalScoresList.innerHTML = '';
     sortedPlayers.slice(0, 3).forEach((player, index) => {
         const li = document.createElement('li');
@@ -335,5 +429,21 @@ socket.on('game_ended', (data) => {
     });
 
     finalScoresModal.style.display = 'flex';
-    socket.disconnect();
+});
+
+socket.on('game_ended_by_host', () => {
+    if (!isHost) {
+        showFeedback('El anfitrión ha terminado la partida o se ha desconectado. Saliendo en 3 segundos.');
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+    }
+});
+
+socket.on('player_left', (data) => {
+    updatePlayersList(data.players);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    showScreen(passwordScreen);
 });

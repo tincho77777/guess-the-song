@@ -12,8 +12,9 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    text-align: center; /* Centra el contenido del body */
+    text-align: center;
     min-height: 100vh;
+    box-sizing: border-box;
 }
 
 h1 {
@@ -27,11 +28,7 @@ h2, h3 {
 }
 
 /* --- Contenedores Principales --- */
-#welcome-screen,
-#host-screen,
-#player-screen,
-#game-lobby,
-#game-screen {
+.container {
     background-color: #34495e; /* Azul más claro */
     padding: 30px;
     border-radius: 10px;
@@ -39,11 +36,15 @@ h2, h3 {
     width: 90%;
     max-width: 500px;
     margin-bottom: 20px;
-    text-align: center; /* Centra el contenido dentro de los contenedores */
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* --- Botones --- */
-button {
+.red-btn {
     background-color: #e74c3c; /* Rojo */
     color: white;
     border: none;
@@ -52,105 +53,220 @@ button {
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    margin: 5px;
+    margin: 5px 0;
 }
 
-button:hover {
+.red-btn:hover {
     background-color: #c0392b; /* Rojo más oscuro */
 }
 
-button:disabled {
+.red-btn:disabled {
     background-color: #95a5a6; /* Gris */
     cursor: not-allowed;
 }
 
-/* --- Campos de Entrada --- */
-#answer-section {
+.end-session-btn {
+    background-color: #f39c12; /* Naranja para diferenciar */
+    margin-top: 20px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.end-session-btn:hover {
+    background-color: #e67e22;
+}
+
+/* --- Campos de Entrada y Botones de Formulario --- */
+.input-group {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 20px auto;
+    position: relative;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
 }
 
-#answer-section input {
+.password-group {
+    flex-direction: row;
+    justify-content: center;
+}
+
+input[type="text"],
+input[type="password"] {
     width: 100%;
-    max-width: 300px;
-    box-sizing: border-box;
-}
-
-#answer-section button {
-    margin-top: 10px;
-    width: 100%;
-    max-width: 300px;
-}
-
-
-input[type="text"], input[type="password"] {
-    width: calc(100% - 24px); /* Ancho completo - padding */
     padding: 12px;
-    margin: 10px 0;
     border-radius: 5px;
     border: 1px solid #7f8c8d;
     background-color: #ecf0f1;
     color: #2c3e50;
     font-size: 1em;
-    text-align: center; /* Centra el texto dentro de los inputs */
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Unifica el tamaño de los botones de la pantalla de bienvenida y el botón de ingresar */
+#welcome-screen .red-btn,
+#password-screen .red-btn {
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 5px;
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.toggle-password-btn:hover {
+    color: #f1c40f;
+}
+
+/* --- Centra los botones en los lobbys y pantallas de juego --- */
+.centered-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Regla específica para centrar el botón de "Comenzar Juego" */
+#start-game-btn {
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto;
+}
+
+/* Contenedor de "Siguiente Ronda" y "Terminar Juego" */
+#round-control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+    margin: 20px auto;
+}
+
+#round-control-buttons .red-btn {
+    flex: 1;
+}
+
+/* Arreglo para el botón "Enviar" del jugador */
+#player-game-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+#player-game-controls .input-group,
+#submit-answer-btn {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* --- Anfitrión: Botones de control de ronda --- */
+/* Nuevo estilo para que el contenedor principal de los controles del host sea una columna */
+#host-controls {
+    display: flex;
+    flex-direction: column; /* Organiza los elementos en una columna */
+    align-items: center; /* Centra los elementos horizontalmente */
+    width: 100%;
+    gap: 10px; /* Espacio entre los contenedores de botones */
+}
+
+/* Contenedor para los 4 botones de tiempo, ahora es una fila */
+.time-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 5px;
+}
+
+/* Estilo para cada uno de los botones de tiempo dentro de su contenedor */
+.time-buttons-container .red-btn {
+    flex: 1; /* Esto hace que se distribuyan equitativamente */
+    padding: 8px 10px;
+    font-size: 0.8em;
+}
+
+/* Contenedor para el botón "Terminar Ronda" en su propia línea */
+.end-round-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+#end-round-btn {
+    width: 100%;
+    max-width: 300px;
 }
 
 /* --- Listas y Jugadores --- */
-#players-list, #score-list, #final-scores-list {
+#players-list,
+#score-list,
+#final-scores-list {
     list-style: none;
     padding: 0;
-    text-align: center; /* Centra el contenido de las listas */
+    text-align: center;
 }
 
-#players-list li, #final-scores-list li {
+#players-list li,
+#final-scores-list li {
     background-color: #2c3e50;
     padding: 10px;
     border-radius: 5px;
     margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 #players-list li {
     text-align: center;
+    justify-content: center;
 }
 
 /* --- Mensajes de estado --- */
-#join-status {
+#join-status, .status-message {
     color: #e74c3c;
     font-weight: bold;
     margin-top: 10px;
 }
 
-/* --- Modo de Selección --- */
-.mode-selection {
-    margin-top: 20px;
+.info-message {
+    color: #3498db;
+    font-style: italic;
+    margin-top: 10px;
 }
 
-.mode-selection button {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-}
-
-/* --- Botones de Control Centrados --- */
-#host-controls,
-#round-control-buttons,
-#host-lobby-controls {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap; 
-    gap: 10px; 
-    margin-top: 20px; /* Añadido margen superior */
-}
-#start-game-btn {
-    margin: 20px auto;
+.feedback-message {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 5px;
+    z-index: 1000;
 }
 
 /* --- Modal de Puntuaciones Finales --- */
-#final-scores-modal {
+.modal {
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -158,7 +274,7 @@ input[type="text"], input[type="password"] {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.7);
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -169,7 +285,7 @@ input[type="text"], input[type="password"] {
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center; /* Centra el contenido del modal */
+    text-align: center;
     width: 90%;
     max-width: 400px;
     position: relative;
@@ -205,27 +321,32 @@ input[type="text"], input[type="password"] {
     margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 /* --- Seccion de Puntuaciones (reglas) --- */
 #points-display {
-    background-color: #2c3e50; /* Color más oscuro */
+    background-color: #2c3e50;
     padding: 15px;
     border-radius: 5px;
     margin-top: 15px;
-    text-align: left; /* Asegurar alineación a la izquierda */
+    text-align: left;
 }
 
-#points-display h3 {
-    color: #f1c40f; /* Título en amarillo */
-    margin-top: 0;
+#points-display h2 {
+    color: #f1c40f;
+    text-align: center;
 }
 
-.points-list {
-    margin-top: 5px;
+#points-list {
+    list-style: disc;
+    padding-left: 20px;
+    font-size: 14px;
 }
-.points-list p {
-    margin: 5px 0;
+
+#points-list li {
+    margin-bottom: 5px;
+    color: #ecf0f1;
 }
 
 /* Oculta completamente el reproductor de audio del anfitrión */
@@ -234,45 +355,60 @@ input[type="text"], input[type="password"] {
 }
 
 /* Estilos de la barra de progreso (visualizador) */
-#host-timer-container,
-#timer-container {
+.timer-bar-container {
     background-color: #2c3e50;
     height: 10px;
     border-radius: 5px;
     margin-top: 10px;
     overflow: hidden;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto;
 }
 
-#host-timer-bar,
-#timer-bar {
+.timer-bar {
     height: 100%;
     background-color: #3498db;
     width: 0;
     transition: width 0s linear;
 }
 
-/* Estilos para el visualizador del jugador */
-.audio-visualizer {
-    display: flex;
+/* Estilos para el visualizador del jugador (ecualizador) */
+#equalizer {
+    display: none;
     justify-content: center;
     align-items: flex-end;
     height: 50px;
     gap: 5px;
     margin-bottom: 20px;
 }
+
 .bar {
     width: 8px;
-    background-color: #3498db;
+    background-color: #f1c40f;
     animation: bounce 1s linear infinite;
 }
-.bar:nth-child(2) { animation-delay: 0.2s; }
-.bar:nth-child(3) { animation-delay: 0.4s; }
-.bar:nth-child(4) { animation-delay: 0.6s; }
-.bar:nth-child(5) { animation-delay: 0.8s; }
+
+.bar:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.bar:nth-child(3) {
+    animation-delay: 0.4s;
+}
+.bar:nth-child(4) {
+    animation-delay: 0.6s;
+}
+.bar:nth-child(5) {
+    animation-delay: 0.8s;
+}
 
 @keyframes bounce {
-    0%, 100% { height: 10px; }
-    50% { height: 40px; }
+    0%, 100% {
+        height: 10px;
+    }
+    50% {
+        height: 40px;
+    }
 }
 
 /* --- Responsividad --- */
@@ -280,20 +416,13 @@ input[type="text"], input[type="password"] {
     body {
         padding: 10px;
     }
-
     h1 {
         font-size: 2em;
     }
-
-    #welcome-screen,
-    #host-screen,
-    #player-screen,
-    #game-lobby,
-    #game-screen {
+    .container {
         padding: 20px;
     }
-
-    button, input {
+    .red-btn {
         font-size: 0.9em;
     }
 }
