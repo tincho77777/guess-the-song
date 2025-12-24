@@ -113,6 +113,25 @@ const songs = [
 
     { title: 'I Will Survive', artist: 'Gloria Gaynor', file: 'gloria_gaynor_i_will_survive.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'FEEL ME?', artist: 'Trueno', file: 'trueno_feel_me.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'September', artist: 'Earth, Wind & Fire', file: 'earth_wind_y_fire_september.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Humanos a Marte', artist: 'Chayanne', file: 'chayanne_humanos_a_marte.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'A Dios Le Pido', artist: 'Juanes', file: 'juanes_a_dios_le_pido.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Azul', artist: 'Cristian Castro', file: 'cristian_castro_azul.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Flaca ', artist: 'Andrés Calamaro', file: 'andres_calamaro_flaca.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'De Musica Ligera', artist: 'Soda Stereo', file: 'soda_stereo_de_musica_ligera.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Crimen', artist: 'Gustavo Cerati', file: 'gustavo_cerati_crimen.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Nada Fue Un Error', artist: 'Coti ', file: 'coti_nada_fue_un_error.mp3', fragmentDurations: [3, 5, 7, 10]},
+
+    { title: 'Color Esperanza', artist: 'Diego Torres', file: 'diego_torres_color_esperanza.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Noviembre Sin Ti', artist: 'Reik', file: 'reik_noviembre_sin_ti.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Angels', artist: 'Robbie Williams', file: 'robbie_williams_angels.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Wonderwall', artist: 'Oasis', file: 'oasis_wonderwall.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Tu Sin Mi', artist: 'Dread Mar I', file: 'dread_mar_i_tu_sin_mi.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Taboo', artist: 'Don Omar', file: 'don_omar_taboo.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Perdoname', artist: 'La Factoría', file: 'perdoname_la_factoria.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Otra Vez', artist: 'Zion & Lennox', file: 'zion_&_lennox_otra_vez.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'capaz', artist: 'Alleh & Yorghaki', file: 'alleh_&_yorghaki_capaz.mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Tu jardín con enanitos', artist: 'Roze', file: 'roze_tu_jardin_con_enanitos.mp3', fragmentDurations: [3, 5, 7, 10]},
 ];
 
 // Exporta el array para que pueda ser importado en otros archivos
