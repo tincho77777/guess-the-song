@@ -4,6 +4,11 @@ const socket = io();
 
 let isHost = false;
 let myGameCode = null;
+let playerName = null;
+let pingInterval = null;
+let lastPongTime = Date.now();
+let reconnectionAttempts = 0;
+const MAX_RECONNECTION_ATTEMPTS = 5;
 
 // Elementos de la interfaz de usuario
 const passwordScreen = document.getElementById('password-screen');
@@ -194,6 +199,7 @@ if (joinBtn) {
         const name = nameInput.value.trim();
         const code = codeInput.value.trim().toUpperCase();
         if (name && code) {
+            playerName = name; // Guardar el nombre para posibles reconexiones
             socket.emit('join_game', { name, code });
         } else {
             if (joinStatus) joinStatus.textContent = 'Por favor, ingresa tu nombre y el código de la partida.';
@@ -260,26 +266,45 @@ socket.on('game_created', (data) => {
 
 // NUEVO EVENTO PARA MANEJAR RECONEXIÓN
 socket.on('rejoined_game', (data) => {
-    isHost = false;
     myGameCode = data.code;
+    isHost = data.isHost || false;
     
     // Si la partida ya ha comenzado
     if (data.state === 'playing') {
         showScreen(gameScreen);
-        hostControls.style.display = 'none';
-        hostAudioContainer.style.display = 'none';
-        playerAudioContainer.style.display = 'block';
-        answerInput.style.display = 'block';
-        submitBtn.style.display = 'block';
-        answerInput.disabled = false;
-        submitBtn.disabled = false;
-        showFeedback(`Te has reconectado a la partida ${myGameCode}.`);
+        
+        if (isHost) {
+            hostControls.style.display = 'flex';
+            hostAudioContainer.style.display = 'block';
+            playerAudioContainer.style.display = 'none';
+            answerInput.style.display = 'none';
+            submitBtn.style.display = 'none';
+            showFeedback(`Te has reconectado como anfitrión a la partida ${myGameCode}.`);
+        } else {
+            hostControls.style.display = 'none';
+            hostAudioContainer.style.display = 'none';
+            playerAudioContainer.style.display = 'block';
+            answerInput.style.display = 'block';
+            submitBtn.style.display = 'block';
+            answerInput.disabled = false;
+            submitBtn.disabled = false;
+            showFeedback(`Te has reconectado a la partida ${myGameCode}.`);
+        }
     } else { // Si la partida aún está en el lobby
         showScreen(gameLobby);
-        hostLobbyControls.style.display = 'none';
-        playerLobbyMessage.style.display = 'block';
         gameCodeDisplay.textContent = `Código de la partida: ${myGameCode}`;
-        showFeedback(`Te has reconectado a la sala de espera de la partida ${myGameCode}.`);
+        
+        if (isHost) {
+            hostLobbyControls.style.display = 'block';
+            playerLobbyMessage.style.display = 'none';
+            startBtn.style.display = 'block';
+            roundControlButtons.style.display = 'none';
+            showFeedback(`Te has reconectado como anfitrión a la partida ${myGameCode}.`);
+        } else {
+            hostLobbyControls.style.display = 'none';
+            playerLobbyMessage.style.display = 'block';
+            showFeedback(`Te has reconectado a la sala de espera de la partida ${myGameCode}.`);
+        }
     }
 
     updatePlayersList(data.players);
@@ -320,48 +345,53 @@ socket.on('game_started', () => {
 });
 
 socket.on('play_audio', (data) => {
+    // Este evento solo lo recibe el anfitrión
+    if (!isHost) return;
+    
     const audioFilePath = `/audio/${data.file}`;
     const duration = data.duration === 'full' ? 9999 : data.duration;
-    
-    if (!isHost) {
-        equalizer.style.display = 'flex';
-    }
 
-    if (isHost) {
-        hostAudioPlayer.src = audioFilePath;
-        hostAudioPlayer.play();
-        
-        if (data.duration !== 'full') {
-            setTimeout(() => {
-                hostAudioPlayer.pause();
-            }, duration * 1000);
-        }
-        
-        hostTimerBar.style.transition = 'width 0s';
-        hostTimerBar.style.width = '100%';
+    hostAudioPlayer.src = audioFilePath;
+    hostAudioPlayer.play();
+    
+    if (data.duration !== 'full') {
         setTimeout(() => {
-            hostTimerBar.style.transition = `width ${duration}s linear`;
-            hostTimerBar.style.width = '0%';
-        }, 100);
-    } else {
-        audioPlayerPlayer.src = audioFilePath;
-        audioPlayerPlayer.play();
-        
-        if (data.duration !== 'full') {
-            setTimeout(() => {
-                audioPlayerPlayer.pause();
-            }, duration * 1000);
-        }
-        
-        if (timerBar) {
-            timerBar.style.transition = 'width 0s';
-            timerBar.style.width = '100%';
-            setTimeout(() => {
-                timerBar.style.transition = `width ${duration}s linear`;
-                timerBar.style.width = '0%';
-            }, 100);
-        }
+            hostAudioPlayer.pause();
+        }, duration * 1000);
     }
+    
+    hostTimerBar.style.transition = 'width 0s';
+    hostTimerBar.style.width = '100%';
+    setTimeout(() => {
+        hostTimerBar.style.transition = `width ${duration}s linear`;
+        hostTimerBar.style.width = '0%';
+    }, 100);
+});
+
+// Nuevo evento para jugadores: mostrar que se está reproduciendo audio
+socket.on('audio_playing', (data) => {
+    // Este evento solo lo reciben los jugadores (no el anfitrión)
+    if (isHost) return;
+    
+    const duration = data.duration === 'full' ? 9999 : data.duration;
+    
+    // Mostrar ecualizador
+    equalizer.style.display = 'flex';
+    
+    // Animar barra de tiempo
+    if (timerBar) {
+        timerBar.style.transition = 'width 0s';
+        timerBar.style.width = '100%';
+        setTimeout(() => {
+            timerBar.style.transition = `width ${duration}s linear`;
+            timerBar.style.width = '0%';
+        }, 100);
+    }
+    
+    // Ocultar ecualizador después de la duración
+    setTimeout(() => {
+        equalizer.style.display = 'none';
+    }, duration * 1000);
 });
 
 socket.on('correct_answer', (data) => {
@@ -446,4 +476,66 @@ socket.on('player_left', (data) => {
 
 window.addEventListener('DOMContentLoaded', () => {
     showScreen(passwordScreen);
+    initializeHeartbeat();
+    initializeVisibilityHandler();
 });
+
+// Sistema de heartbeat para mantener la conexión activa
+function initializeHeartbeat() {
+    // Enviar ping cada 5 segundos
+    pingInterval = setInterval(() => {
+        socket.emit('ping');
+        
+        // Verificar si han pasado más de 30 segundos sin pong
+        if (Date.now() - lastPongTime > 30000) {
+            console.log('Conexión perdida, intentando reconectar...');
+            handleReconnection();
+        }
+    }, 5000);
+}
+
+// Responder a pongs del servidor
+socket.on('pong', () => {
+    lastPongTime = Date.now();
+    reconnectionAttempts = 0;
+});
+
+// Manejar cambios de visibilidad de la página
+function initializeVisibilityHandler() {
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            console.log('Página oculta, manteniendo conexión...');
+        } else {
+            console.log('Página visible, verificando conexión...');
+            // Enviar un ping inmediatamente al volver
+            socket.emit('ping');
+            
+            // Si hay un juego activo, verificar el estado
+            if (myGameCode) {
+                if (isHost) {
+                    socket.emit('rejoin_as_host', { code: myGameCode });
+                } else if (playerName) {
+                    socket.emit('join_game', { name: playerName, code: myGameCode });
+                }
+            }
+        }
+    });
+}
+
+// Función para manejar reconexión
+function handleReconnection() {
+    if (reconnectionAttempts >= MAX_RECONNECTION_ATTEMPTS) {
+        showFeedback('No se pudo reconectar. Por favor, recarga la página.');
+        return;
+    }
+    
+    reconnectionAttempts++;
+    
+    if (myGameCode) {
+        if (isHost) {
+            socket.emit('rejoin_as_host', { code: myGameCode });
+        } else if (playerName) {
+            socket.emit('join_game', { name: playerName, code: myGameCode });
+        }
+    }
+}

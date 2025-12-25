@@ -8,7 +8,12 @@ const songs = require('./songs.js');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 const HOST_PASSWORD = process.env.HOST_PASSWORD;
@@ -18,23 +23,38 @@ console.log('Valor de HOST_PASSWORD desde .env:', HOST_PASSWORD);
 const games = {};
 let isHostSessionActive = false;
 let currentHostId = null;
+const disconnectedPlayers = {}; // {gameCode: {playerId: {player, timeout}}}
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/audio', express.static(path.join(__dirname, 'audio')));
 
+// Configurar Socket.IO con timeouts más largos
+io.engine.on("connection", (rawSocket) => {
+    rawSocket.pingInterval = 10000; // 10 segundos
+    rawSocket.pingTimeout = 60000;  // 60 segundos
+});
+
 io.on('connection', (socket) => {
-    console.log(`Jugador conectado: ${socket.id}`);
+    const connectionTime = new Date().toLocaleTimeString();
+    console.log(`[${connectionTime}] ✓ Jugador conectado: ${socket.id}`);
 
     // Al conectarse, notificar el estado de la sesión de anfitrión
     socket.emit('session_status', { isActive: isHostSessionActive });
+
+    // Responder a pings del cliente para mantener conexión viva
+    socket.on('ping', () => {
+        socket.emit('pong');
+        console.log(`[${new Date().toLocaleTimeString()}] ♥ Ping recibido de ${socket.id}`);
+    });
 
     socket.on('submit_host_password', (password) => {
         if (HOST_PASSWORD && password.trim() === HOST_PASSWORD.trim()) {
             isHostSessionActive = true;
             currentHostId = socket.id;
             io.emit('session_status', { isActive: true });
-            console.log(`Sesión de anfitrión abierta por ${socket.id}`);
+            console.log(`[${new Date().toLocaleTimeString()}] 🔑 Sesión de anfitrión abierta por ${socket.id}`);
         } else {
+            console.log(`[${new Date().toLocaleTimeString()}] ❌ Contraseña incorrecta intentada por ${socket.id}`);
             io.to(socket.id).emit('password_incorrect');
         }
     });
@@ -71,7 +91,7 @@ io.on('connection', (socket) => {
             lastDuration: 0
         };
         socket.join(gameCode);
-        console.log(`Partida creada con código: ${gameCode} en modo ${games[gameCode].mode}`);
+        console.log(`[${new Date().toLocaleTimeString()}] 🎮 Partida creada - Código: ${gameCode} | Modo: ${games[gameCode].mode} | Anfitrión: ${socket.id}`);
         io.to(socket.id).emit('game_created', { code: gameCode });
     });
 
@@ -86,7 +106,14 @@ io.on('connection', (socket) => {
         const existingPlayer = Object.values(game.players).find(p => p.name.toLowerCase() === name.toLowerCase());
     
         if (existingPlayer) {
-            console.log(`Jugador existente ${name} reconectado. Actualizando socket ID.`);
+            console.log(`[${new Date().toLocaleTimeString()}] 🔄 RECONEXIÓN: ${name} (${existingPlayer.id} → ${socket.id}) | Partida: ${code} | Puntaje: ${existingPlayer.score}`);
+            
+            // Limpiar timeout de desconexión si existe
+            if (disconnectedPlayers[code] && disconnectedPlayers[code][existingPlayer.id]) {
+                clearTimeout(disconnectedPlayers[code][existingPlayer.id].timeout);
+                delete disconnectedPlayers[code][existingPlayer.id];
+                console.log(`[${new Date().toLocaleTimeString()}] ⏰ Timeout de desconexión cancelado para ${name}`);
+            }
             
             // Asignar el nuevo socket ID al jugador existente
             game.players[socket.id] = { 
@@ -100,7 +127,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).emit('rejoined_game', { 
                 code: game.code, 
                 players: Object.values(game.players),
-                state: game.state 
+                state: game.state,
+                isHost: false
             });
             io.to(game.code).emit('player_joined', Object.values(game.players));
             return;
@@ -117,16 +145,50 @@ io.on('connection', (socket) => {
         game.players[socket.id] = newPlayer;
     
         socket.join(game.code);
-        console.log(`Jugador ${name} se unió a la partida ${code}`);
+        console.log(`[${new Date().toLocaleTimeString()}] ➕ NUEVO JUGADOR: ${name} (${socket.id}) | Partida: ${code} | Total jugadores: ${Object.keys(game.players).length}`);
         io.to(game.code).emit('player_joined', Object.values(game.players));
+    });
+
+    // Manejo de reconexión del anfitrión
+    socket.on('rejoin_as_host', ({ code }) => {
+        const game = games[code];
+        if (!game) {
+            io.to(socket.id).emit('rejoin_failed', 'Código de partida incorrecto.');
+            return;
+        }
+        
+        // Cancelar timeout de reconexión si existe
+        if (game.hostReconnectionTimeout) {
+            clearTimeout(game.hostReconnectionTimeout);
+            delete game.hostReconnectionTimeout;
+        }
+        
+        if (game.hostId && game.hostId !== socket.id) {
+            // Verificar si el anfitrión anterior se desconectó
+            console.log(`Anfitrión reconectándose a partida ${code}`);
+            game.hostId = socket.id;
+            socket.join(game.code);
+            
+            io.to(socket.id).emit('rejoined_game', { 
+                code: game.code, 
+                players: Object.values(game.players),
+                state: game.state,
+                isHost: true
+            });
+            
+            console.log(`Anfitrión reconectado a partida ${code}`);
+        }
     });
 
     socket.on('start_game', () => {
         const game = findGameByHostId(socket.id);
         if (game && game.state === 'waiting' && Object.keys(game.players).length > 0) {
             game.state = 'playing';
+            console.log(`[${new Date().toLocaleTimeString()}] 🎬 JUEGO INICIADO | Partida: ${game.code} | Jugadores: ${Object.keys(game.players).length}`);
             selectNewSong(game);
             io.to(game.code).emit('game_started');
+        } else {
+            console.log(`[${new Date().toLocaleTimeString()}] ⚠️ No se pudo iniciar juego | Estado: ${game?.state} | Jugadores: ${game ? Object.keys(game.players).length : 0}`);
         }
     });
 
@@ -143,8 +205,13 @@ io.on('connection', (socket) => {
         if (game && game.state === 'playing' && game.currentSong) {
             game.lastDuration = data.duration;
             const duration = data.duration === 'full' ? 9999 : data.duration;
-            io.to(game.code).emit('play_audio', {
+            // Solo enviar al anfitrión para que reproduzca el audio
+            io.to(socket.id).emit('play_audio', {
                 file: game.currentSong.file,
+                duration: duration
+            });
+            // Notificar a los jugadores que se está reproduciendo (para mostrar ecualizador)
+            socket.to(game.code).emit('audio_playing', {
                 duration: duration
             });
         }
@@ -204,26 +271,63 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
-        console.log('Jugador desconectado:', socket.id);
+    socket.on('disconnect', (reason) => {
+        const disconnectTime = new Date().toLocaleTimeString();
+        console.log(`[${disconnectTime}] 🔌 DESCONEXIÓN: ${socket.id} | Razón: ${reason}`);
         
-        if (socket.id === currentHostId) {
-            isHostSessionActive = false;
-            currentHostId = null;
-            io.emit('session_status', { isActive: false });
-            console.log(`Sesión de anfitrión cerrada por desconexión del anfitrión.`);
+        // Manejar desconexión del anfitrión
+        const hostGame = findGameByHostId(socket.id);
+        if (hostGame) {
+            console.log(`[${disconnectTime}] 👑 ANFITRIÓN DESCONECTADO | Partida: ${hostGame.code} | Jugadores: ${Object.keys(hostGame.players).length} | Esperando 30s para reconexión...`);
             
-            const hostGame = findGameByHostId(socket.id);
-            if (hostGame) {
-                io.to(hostGame.code).emit('game_ended_by_host');
-                delete games[hostGame.code];
-                console.log(`Partida ${hostGame.code} finalizada por desconexión del anfitrión.`);
-            }
+            // Dar 30 segundos para que el anfitrión se reconecte
+            const reconnectionTimeout = setTimeout(() => {
+                if (games[hostGame.code] && games[hostGame.code].hostId === socket.id) {
+                    console.log(`[${new Date().toLocaleTimeString()}] ⏰ TIMEOUT: Anfitrión no se reconectó | Finalizando partida ${hostGame.code}`);
+                    io.to(hostGame.code).emit('game_ended_by_host');
+                    delete games[hostGame.code];
+                    
+                    if (socket.id === currentHostId) {
+                        isHostSessionActive = false;
+                        currentHostId = null;
+                        io.emit('session_status', { isActive: false });
+                    }
+                }
+            }, 30000); // 30 segundos
+            
+            // Guardar referencia del timeout para cancelarlo si se reconecta
+            hostGame.hostReconnectionTimeout = reconnectionTimeout;
+            return;
         }
         
+        // Manejar desconexión de jugadores
         const game = findGameByPlayerId(socket.id);
         if (game && game.players[socket.id]) {
-            console.log(`Jugador ${game.players[socket.id].name} desconectado temporalmente de la partida ${game.code}.`);
+            const player = game.players[socket.id];
+            console.log(`[${disconnectTime}] 👤 JUGADOR DESCONECTADO | Nombre: ${player.name} | Partida: ${game.code} | Puntaje: ${player.score} | Esperando 2min para reconexión...`);
+            
+            // Guardar jugador desconectado y dar 2 minutos para reconectar
+            if (!disconnectedPlayers[game.code]) {
+                disconnectedPlayers[game.code] = {};
+            }
+            
+            const reconnectionTimeout = setTimeout(() => {
+                if (game.players[socket.id]) {
+                    console.log(`[${new Date().toLocaleTimeString()}] ⏰ TIMEOUT: ${player.name} no se reconectó | Eliminando de partida ${game.code}`);
+                    delete game.players[socket.id];
+                    io.to(game.code).emit('player_left', { players: Object.values(game.players) });
+                }
+                if (disconnectedPlayers[game.code]) {
+                    delete disconnectedPlayers[game.code][socket.id];
+                }
+            }, 120000); // 2 minutos
+            
+            disconnectedPlayers[game.code][socket.id] = {
+                player: player,
+                timeout: reconnectionTimeout
+            };
+        } else {
+            console.log(`[${disconnectTime}] ℹ️ Desconexión de socket sin juego activo`);
         }
     });
 });
@@ -315,5 +419,20 @@ function calculatePoints(playerAnswer, game) {
 }
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor escuchando en http://localhost:${PORT}`);
+    console.log('\n' + '='.repeat(60));
+    console.log('🎵  GUESS THE SONG - SERVIDOR INICIADO  🎵');
+    console.log('='.repeat(60));
+    console.log(`📡 Servidor: http://localhost:${PORT}`);
+    console.log(`🔑 Contraseña anfitrión: ${HOST_PASSWORD ? '✓ Configurada' : '✗ No configurada'}`);
+    console.log(`🔧 Configuración Socket.IO:`);
+    console.log(`   - Ping Interval: 10s`);
+    console.log(`   - Ping Timeout: 60s`);
+    console.log(`   - Reconexión Anfitrión: 30s`);
+    console.log(`   - Reconexión Jugadores: 2min`);
+    console.log('='.repeat(60));
+    console.log('📊 Logs activos:');
+    console.log('   ✓ Conexiones      🔌 Desconexiones');
+    console.log('   🎮 Partidas       👥 Jugadores');
+    console.log('   🔄 Reconexiones   ⚠️  Errores');
+    console.log('='.repeat(60) + '\n');
 });
