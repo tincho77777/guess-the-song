@@ -273,6 +273,12 @@ socket.on('rejoined_game', (data) => {
     if (data.state === 'playing') {
         showScreen(gameScreen);
         
+        // Mostrar código de juego en pantalla
+        const gameCodeDisplay = document.getElementById('game-code-display');
+        if (gameCodeDisplay && myGameCode) {
+            gameCodeDisplay.textContent = `Código: ${myGameCode}`;
+        }
+        
         if (isHost) {
             hostControls.style.display = 'flex';
             hostAudioContainer.style.display = 'block';
@@ -332,6 +338,13 @@ socket.on('join_failed', (message) => {
 
 socket.on('game_started', () => {
     showScreen(gameScreen);
+    
+    // Mostrar código de juego en pantalla
+    const gameCodeDisplay = document.getElementById('game-code-display');
+    if (gameCodeDisplay && myGameCode) {
+        gameCodeDisplay.textContent = `Código: ${myGameCode}`;
+    }
+    
     if(isHost) {
         hostControls.style.display = 'flex';
         hostAudioContainer.style.display = 'block';

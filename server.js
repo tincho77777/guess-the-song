@@ -104,9 +104,9 @@ io.on('connection', (socket) => {
         }
     
         // Verificar si es el anfitrión intentando reconectarse
-        if (game.hostId && game.hostReconnectionTimeout) {
+        if (game.hostName && game.hostReconnectionTimeout && name.toLowerCase() === game.hostName.toLowerCase()) {
             // Es una reconexión de anfitrión en progreso
-            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: Detectada en [${code}]`);
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: ${name} detectada en [${code}]`);
             
             clearTimeout(game.hostReconnectionTimeout);
             delete game.hostReconnectionTimeout;
@@ -121,7 +121,7 @@ io.on('connection', (socket) => {
                 isHost: true
             });
             
-            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: Exitosa [${code}]`);
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: ${name} exitosa [${code}]`);
             return;
         }
     

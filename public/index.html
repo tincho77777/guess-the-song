@@ -65,6 +65,7 @@
 
     <div class="container" id="game-screen" style="display: none;">
         <h1>¿Qué canción es?</h1>
+        <p id="game-code-display" style="text-align: center; font-size: 1.2em; margin-bottom: 15px; color: #666;"></p>
         <div id="host-controls" style="display: none;">
             <div class="time-buttons-container">
                 <button id="play-3s-btn" class="red-btn">3s</button>
@@ -104,11 +105,12 @@
         <div id="points-display">
             <h2>Puntuaciones</h2>
             <ul id="points-list">
-                <li>Acierto de título y/o artista en 3s: 100 puntos</li>
-                <li>Acierto de título y/o artista en 5s: 70 puntos</li>
-                <li>Acierto de título y/o artista en 7s: 50 puntos</li>
-                <li>Acierto de título y/o artista en 10s: 30 puntos</li>
-                <li>Acierto solo de artista (en cualquier momento): 50% de los puntos</li>
+                <li>Acierto de título Y artista en 3s: 100 puntos</li>
+                <li>Acierto de título Y artista en 5s: 70 puntos</li>
+                <li>Acierto de título Y artista en 7s: 50 puntos</li>
+                <li>Acierto de título Y artista en canción completa: 30 puntos</li>
+                <li>Solo título: 75% de los puntos base</li>
+                <li>Solo artista: 50% de los puntos base</li>
             </ul>
         </div>
     </div>
