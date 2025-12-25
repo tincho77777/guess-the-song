@@ -319,6 +319,11 @@ socket.on('player_joined', (players) => {
     updatePlayersList(players);
 });
 
+// Nuevo evento: solo actualizar lista de jugadores sin cambiar pantallas
+socket.on('players_updated', (players) => {
+    updatePlayersList(players);
+});
+
 socket.on('join_failed', (message) => {
     if (joinStatus) {
         joinStatus.textContent = message;

@@ -106,7 +106,7 @@ io.on('connection', (socket) => {
         const existingPlayer = Object.values(game.players).find(p => p.name.toLowerCase() === name.toLowerCase());
     
         if (existingPlayer) {
-            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION: ${name} [${code}] puntos=${existingPlayer.score}`);
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION: ${name} [${code}] puntos=${existingPlayer.score} estado=${game.state}`);
             
             // Limpiar timeout de desconexión si existe
             if (disconnectedPlayers[code] && disconnectedPlayers[code][existingPlayer.id]) {
@@ -123,13 +123,18 @@ io.on('connection', (socket) => {
             delete game.players[existingPlayer.id];
     
             socket.join(game.code);
+            
+            // Enviar al jugador reconectado el estado actual
             io.to(socket.id).emit('rejoined_game', { 
                 code: game.code, 
                 players: Object.values(game.players),
                 state: game.state,
                 isHost: false
             });
-            io.to(game.code).emit('player_joined', Object.values(game.players));
+            
+            // Solo actualizar la lista de jugadores para todos (sin cambiar pantallas)
+            // No usar player_joined porque hace que vuelvan al lobby
+            io.to(game.code).emit('players_updated', Object.values(game.players));
             return;
         }
     
@@ -264,6 +269,9 @@ io.on('connection', (socket) => {
                     score: player.score,
                     players: Object.values(game.players)
                 });
+                
+                // Actualizar lista de jugadores para todos
+                io.to(game.code).emit('players_updated', Object.values(game.players));
             } else {
                 io.to(socket.id).emit('wrong_answer');
             }
