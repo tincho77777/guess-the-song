@@ -482,16 +482,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Sistema de heartbeat para mantener la conexión activa
 function initializeHeartbeat() {
-    // Enviar ping cada 5 segundos
+    // Enviar ping cada 15 segundos (más espaciado)
     pingInterval = setInterval(() => {
         socket.emit('ping');
         
-        // Verificar si han pasado más de 30 segundos sin pong
-        if (Date.now() - lastPongTime > 30000) {
+        // Verificar si han pasado más de 60 segundos sin pong
+        if (Date.now() - lastPongTime > 60000) {
             console.log('Conexión perdida, intentando reconectar...');
             handleReconnection();
         }
-    }, 5000);
+    }, 15000); // Cambiar de 5s a 15s
 }
 
 // Responder a pongs del servidor
