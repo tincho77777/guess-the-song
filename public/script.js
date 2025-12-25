@@ -518,8 +518,10 @@ function initializeVisibilityHandler() {
             // Si hay un juego activo, verificar el estado
             if (myGameCode) {
                 if (isHost) {
+                    console.log(`Anfitrión volviendo, reconectando a partida ${myGameCode}`);
                     socket.emit('rejoin_as_host', { code: myGameCode });
                 } else if (playerName) {
+                    console.log(`Jugador volviendo, reconectando a partida ${myGameCode}`);
                     socket.emit('join_game', { name: playerName, code: myGameCode });
                 }
             }

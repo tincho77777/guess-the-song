@@ -74,7 +74,8 @@ io.on('connection', (socket) => {
             return;
         }
 
-        const gameCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        // Generar código numérico de 4 dígitos
+        const gameCode = Math.floor(1000 + Math.random() * 9000).toString();
         games[gameCode] = {
             state: 'waiting',
             code: gameCode,
@@ -102,7 +103,29 @@ io.on('connection', (socket) => {
             return;
         }
     
-        // Lógica para permitir la reconexión
+        // Verificar si es el anfitrión intentando reconectarse
+        if (game.hostId && game.hostReconnectionTimeout) {
+            // Es una reconexión de anfitrión en progreso
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: Detectada en [${code}]`);
+            
+            clearTimeout(game.hostReconnectionTimeout);
+            delete game.hostReconnectionTimeout;
+            
+            game.hostId = socket.id;
+            socket.join(game.code);
+            
+            io.to(socket.id).emit('rejoined_game', { 
+                code: game.code, 
+                players: Object.values(game.players),
+                state: game.state,
+                isHost: true
+            });
+            
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: Exitosa [${code}]`);
+            return;
+        }
+    
+        // Lógica para permitir la reconexión de jugadores
         const existingPlayer = Object.values(game.players).find(p => p.name.toLowerCase() === name.toLowerCase());
     
         if (existingPlayer) {
@@ -161,27 +184,26 @@ io.on('connection', (socket) => {
             return;
         }
         
+        console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: Intento manual [${code}]`);
+        
         // Cancelar timeout de reconexión si existe
         if (game.hostReconnectionTimeout) {
             clearTimeout(game.hostReconnectionTimeout);
             delete game.hostReconnectionTimeout;
         }
         
-        if (game.hostId && game.hostId !== socket.id) {
-            // Verificar si el anfitrión anterior se desconectó
-            console.log(`Anfitrión reconectándose a partida ${code}`);
-            game.hostId = socket.id;
-            socket.join(game.code);
-            
-            io.to(socket.id).emit('rejoined_game', { 
-                code: game.code, 
-                players: Object.values(game.players),
-                state: game.state,
-                isHost: true
-            });
-            
-            console.log(`Anfitrión reconectado a partida ${code}`);
-        }
+        // Actualizar ID del anfitrión
+        game.hostId = socket.id;
+        socket.join(game.code);
+        
+        io.to(socket.id).emit('rejoined_game', { 
+            code: game.code, 
+            players: Object.values(game.players),
+            state: game.state,
+            isHost: true
+        });
+        
+        console.log(`[${new Date().toLocaleTimeString()}] RECONEXION ANFITRION: Exitosa [${code}]`);
     });
 
     socket.on('start_game', () => {
