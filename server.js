@@ -74,8 +74,13 @@ io.on('connection', (socket) => {
             return;
         }
 
-        // Generar código numérico de 4 dígitos
-        const gameCode = Math.floor(1000 + Math.random() * 9000).toString();
+        // Generar código único de 4 dígitos (evitar duplicados)
+        let gameCode;
+        let attempts = 0;
+        do {
+            gameCode = Math.floor(1000 + Math.random() * 9000).toString();
+            attempts++;
+        } while (games[gameCode] && attempts < 100);
         games[gameCode] = {
             state: 'waiting',
             code: gameCode,
@@ -170,10 +175,12 @@ io.on('connection', (socket) => {
         // Lógica para unirse a una partida nueva
         const newPlayer = { name: name, id: socket.id, score: 0 };
         game.players[socket.id] = newPlayer;
-    
+
         socket.join(game.code);
         console.log(`[${new Date().toLocaleTimeString()}] JUGADOR: ${name} se unio [${code}] total=${Object.keys(game.players).length}`);
-        io.to(game.code).emit('player_joined', Object.values(game.players));
+        
+        io.to(socket.id).emit('join_success', { code: code, playerName: name });
+        io.to(code).emit('player_joined', Object.values(game.players));
     });
 
     // Manejo de reconexión del anfitrión
@@ -274,6 +281,8 @@ io.on('connection', (socket) => {
                 return;
             }
 
+            const titleIsCorrect = containsAllWords(answer, game.correctTitle);
+            const artistIsCorrect = containsAllWords(answer, game.correctArtist);
             const pointsToAdd = calculatePoints(answer, game);
             
             if (pointsToAdd > 0) {
@@ -282,11 +291,14 @@ io.on('connection', (socket) => {
                 
                 io.to(socket.id).emit('player_guessed_correctly', {
                     answer: game.correctAnswer,
-                    points: pointsToAdd
+                    points: pointsToAdd,
+                    titleCorrect: titleIsCorrect,
+                    artistCorrect: artistIsCorrect
                 });
 
                 io.to(game.code).emit('correct_answer', {
                     player: player.name,
+                    playerId: socket.id,
                     answer: game.correctAnswer,
                     score: player.score,
                     players: Object.values(game.players)
@@ -408,9 +420,25 @@ function normalizeString(text) {
 }
 
 function containsAllWords(haystack, needle) {
-    const haystackWords = new Set(normalizeString(haystack).split(' ').filter(word => word.length > 0));
-    const needleWords = normalizeString(needle).split(' ').filter(word => word.length > 0);
-    return needleWords.every(word => haystackWords.has(word));
+    const normalizedHaystack = normalizeString(haystack);
+    const normalizedNeedle = normalizeString(needle);
+    const needleWords = normalizedNeedle.split(' ').filter(word => word.length > 0);
+    
+    // Verificar que todas las palabras del needle aparezcan consecutivamente en haystack
+    const haystackWords = normalizedHaystack.split(' ').filter(word => word.length > 0);
+    
+    // Buscar si las palabras del needle aparecen consecutivas en alguna posición de haystack
+    for (let i = 0; i <= haystackWords.length - needleWords.length; i++) {
+        let match = true;
+        for (let j = 0; j < needleWords.length; j++) {
+            if (haystackWords[i + j] !== needleWords[j]) {
+                match = false;
+                break;
+            }
+        }
+        if (match) return true;
+    }
+    return false;
 }
 
 function calculatePoints(playerAnswer, game) {

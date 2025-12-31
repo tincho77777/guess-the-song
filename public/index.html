@@ -17,6 +17,8 @@
             </button>
         </div>
         <button id="submit-password-btn" class="red-btn">Ingresar</button>
+        <p id="session-error-message" style="display: none; color: #e74c3c; margin-top: 10px;"></p>
+        <button id="reconnect-btn" class="red-btn" style="display: none; margin-top: 10px;">Reconectar</button>
     </div>
 
     <div class="container" id="welcome-screen" style="display: none;">
@@ -29,6 +31,9 @@
     
     <div class="container" id="host-creation-screen" style="display: none;">
         <h1>Crear Partida</h1>
+        <div class="input-group">
+            <input type="text" id="host-name-input" placeholder="Tu nombre de anfitrión">
+        </div>
         <p>Selecciona el modo de juego:</p>
         <button id="fragments-btn" class="red-btn">Fragmentos de Canción</button>
         <button id="instruments-btn" class="red-btn">Instrumentos</button>
@@ -101,6 +106,27 @@
             <input type="text" id="answer-input" placeholder="Título y artista">
         </div>
         <button id="submit-answer-btn" class="red-btn">Enviar</button>
+        
+        <div id="instructions-display">
+            <h2>📝 Cómo responder</h2>
+            <p style="margin: 10px 0; font-size: 0.95em; line-height: 1.4;">
+                Escribe <strong>todas las palabras</strong> del título y del artista (sin importar orden, mayúsculas o tildes).
+            </p>
+            <div style="background: #f0f0f0; padding: 12px; border-radius: 8px; margin: 10px 0;">
+                <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                    <strong>Ejemplo:</strong> Para "Billie Jean" de "Michael Jackson"
+                </p>
+                <p style="margin: 5px 0; color: #2ecc71; font-weight: bold;">
+                    ✅ billie jean michael jackson
+                </p>
+                <p style="margin: 5px 0; color: #2ecc71; font-weight: bold;">
+                    ✅ Michael Jackson - Billie Jean
+                </p>
+                <p style="margin: 5px 0; color: #e74c3c;">
+                    ❌ billie jean <span style="font-size: 0.85em;">(falta artista, 75%)</span>
+                </p>
+            </div>
+        </div>
         
         <div id="points-display">
             <h2>Puntuaciones</h2>

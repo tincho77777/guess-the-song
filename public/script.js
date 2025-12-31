@@ -27,6 +27,8 @@ const endGameReturnBtn = document.getElementById('end-game-return-btn');
 const hostPasswordInput = document.getElementById('host-password-input');
 const submitPasswordBtn = document.getElementById('submit-password-btn');
 const togglePasswordBtn = document.getElementById('toggle-password');
+const sessionErrorMessage = document.getElementById('session-error-message');
+const reconnectBtn = document.getElementById('reconnect-btn');
 
 const hostBtn = document.getElementById('host-btn');
 const playerBtn = document.getElementById('player-btn');
@@ -112,8 +114,28 @@ function updatePlayersList(players) {
 
 submitPasswordBtn.addEventListener('click', () => {
     const password = hostPasswordInput.value;
+    if (password.trim()) {
+        if (sessionErrorMessage) sessionErrorMessage.style.display = 'none';
+        if (reconnectBtn) reconnectBtn.style.display = 'none';
+    }
     socket.emit('submit_host_password', password);
 });
+
+if (reconnectBtn) {
+    reconnectBtn.addEventListener('click', () => {
+        const password = hostPasswordInput.value;
+        if (password.trim()) {
+            if (sessionErrorMessage) sessionErrorMessage.style.display = 'none';
+            if (reconnectBtn) reconnectBtn.style.display = 'none';
+            socket.emit('submit_host_password', password);
+        } else {
+            if (sessionErrorMessage) {
+                sessionErrorMessage.textContent = 'Por favor ingresa la contraseña';
+                sessionErrorMessage.style.display = 'block';
+            }
+        }
+    });
+}
 
 if (togglePasswordBtn) {
     togglePasswordBtn.addEventListener('click', () => {
@@ -141,12 +163,24 @@ playerBtn.addEventListener('click', () => {
 
 if (fragmentsBtn) {
     fragmentsBtn.addEventListener('click', () => {
-        socket.emit('create_game', { mode: 'fragments' });
+        const hostName = document.getElementById('host-name-input').value.trim();
+        if (!hostName) {
+            showFeedback('Por favor, ingresa tu nombre de anfitrión.');
+            return;
+        }
+        playerName = hostName; // Guardar el nombre del anfitrión
+        socket.emit('create_game', { mode: 'fragments', hostName: hostName });
     });
 }
 if (instrumentsBtn) {
     instrumentsBtn.addEventListener('click', () => {
-        socket.emit('create_game', { mode: 'instruments' });
+        const hostName = document.getElementById('host-name-input').value.trim();
+        if (!hostName) {
+            showFeedback('Por favor, ingresa tu nombre de anfitrión.');
+            return;
+        }
+        playerName = hostName; // Guardar el nombre del anfitrión
+        socket.emit('create_game', { mode: 'instruments', hostName: hostName });
     });
 }
 
@@ -249,8 +283,19 @@ socket.on('password_incorrect', () => {
 });
 
 socket.on('creation_failed', (message) => {
-    showFeedback(message);
-    showScreen(welcomeScreen);
+    if (message.includes('sesión de anfitrión no está activa')) {
+        showScreen(passwordScreen);
+        if (sessionErrorMessage) {
+            sessionErrorMessage.textContent = message + ' Por favor, reconecta.';
+            sessionErrorMessage.style.display = 'block';
+        }
+        if (reconnectBtn) {
+            reconnectBtn.style.display = 'block';
+        }
+    } else {
+        showFeedback(message);
+        showScreen(welcomeScreen);
+    }
 });
 
 socket.on('game_created', (data) => {
@@ -413,7 +458,7 @@ socket.on('audio_playing', (data) => {
 });
 
 socket.on('correct_answer', (data) => {
-    if (!isHost) {
+    if (!isHost && data.playerId !== socket.id) {
         showFeedback(`¡${data.player} adivinó la canción!`);
     }
     updatePlayersList(data.players);
@@ -452,7 +497,15 @@ socket.on('round_summary', (data) => {
 
 socket.on('player_guessed_correctly', (data) => {
     if (!isHost) {
-        showFeedback(`¡Acertaste! La canción era: "${data.answer}" y ganaste ${data.points} puntos.`);
+        let message = '';
+        if (data.titleCorrect && data.artistCorrect) {
+            message = `🎉 ¡Perfecto! Acertaste título y artista: "${data.answer}" (+${data.points} puntos)`;
+        } else if (data.titleCorrect) {
+            message = `✅ ¡Bien! Acertaste el título (faltó el artista). "${data.answer}" (+${data.points} puntos)`;
+        } else if (data.artistCorrect) {
+            message = `✅ ¡Bien! Acertaste el artista (faltó el título). "${data.answer}" (+${data.points} puntos)`;
+        }
+        showFeedback(message);
         answerInput.disabled = true;
         submitBtn.disabled = true;
     }
@@ -481,10 +534,16 @@ socket.on('game_ended', (data) => {
 
 socket.on('game_ended_by_host', () => {
     if (!isHost) {
-        showFeedback('El anfitrión ha terminado la partida o se ha desconectado. Saliendo en 3 segundos.');
+        showFeedback('El anfitrión ha terminado la partida o se ha desconectado.');
         setTimeout(() => {
             window.location.reload();
         }, 3000);
+    } else {
+        // Si eres el anfitrión desconectado, permitir reconexión
+        showFeedback(`Te desconectaste de la partida ${myGameCode}. Para reconectarte, ve a "Unirse a Partida" e ingresa tu nombre "${playerName}" y código "${myGameCode}".`);
+        setTimeout(() => {
+            showScreen(welcomeScreen);
+        }, 5000);
     }
 });
 
