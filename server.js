@@ -12,7 +12,13 @@ const io = new Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
+    transports: ['websocket', 'polling'],
+    upgradeTimeout: 30000,
+    allowUpgrades: true,
+    perMessageDeflate: false,
+    httpCompression: false,
+    maxHttpBufferSize: 1e8
 });
 
 const PORT = process.env.PORT || 3000;
@@ -482,6 +488,6 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor: http://localhost:${PORT}`);
     console.log(`Password: ${HOST_PASSWORD ? 'OK' : 'NO CONFIGURADA'}`);
     console.log(`Ping Interval: 10s | Timeout: 60s`);
-    console.log(`Reconexion: Anfitrion=30s | Jugadores=2min`);
+    console.log(`Reconexion: Anfitrion=30s | Jugadores=5min`);
     console.log('='.repeat(50) + '\n');
 });
