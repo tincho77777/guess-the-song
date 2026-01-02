@@ -109,7 +109,10 @@ io.on('connection', (socket) => {
 
     socket.on('join_game', ({ name, code }) => {
         const game = games[code];
+        console.log(`[${new Date().toLocaleTimeString()}] INTENTO UNION: ${name} → [${code}] estado=${game ? game.state : 'NO_EXISTE'}`);
+        
         if (!game) {
+            console.log(`[${new Date().toLocaleTimeString()}] FALLO: Código incorrecto [${code}]`);
             io.to(socket.id).emit('join_failed', 'Código de partida incorrecto.');
             return;
         }
@@ -138,33 +141,57 @@ io.on('connection', (socket) => {
     
         // Lógica para permitir la reconexión de jugadores
         const existingPlayer = Object.values(game.players).find(p => p.name.toLowerCase() === name.toLowerCase());
+        console.log(`[${new Date().toLocaleTimeString()}] BUSQUEDA RECONEXION: ${name} [${code}] | jugador_encontrado=${!!existingPlayer} | jugadores_totales=${Object.keys(game.players).length} | lista=[${Object.values(game.players).map(p => p.name).join(', ')}]`);
     
         if (existingPlayer) {
-            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION: ${name} [${code}] puntos=${existingPlayer.score} estado=${game.state}`);
+            const hasTimeout = disconnectedPlayers[code] && disconnectedPlayers[code][existingPlayer.id];
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION: ${name} [${code}] puntos=${existingPlayer.score} estado=${game.state} timeout_pendiente=${!!hasTimeout} | socket_actual=${socket.id} | socket_previo=${existingPlayer.id}`);
             
             // Limpiar timeout de desconexión si existe
-            if (disconnectedPlayers[code] && disconnectedPlayers[code][existingPlayer.id]) {
+            if (hasTimeout) {
                 clearTimeout(disconnectedPlayers[code][existingPlayer.id].timeout);
                 delete disconnectedPlayers[code][existingPlayer.id];
+                console.log(`[${new Date().toLocaleTimeString()}] TIMEOUT CANCELADO: ${name} [${code}]`);
             }
             
-            // Asignar el nuevo socket ID al jugador existente
-            game.players[socket.id] = { 
-                ...existingPlayer, 
-                id: socket.id 
-            };
-            // Eliminar la entrada antigua con el ID anterior
-            delete game.players[existingPlayer.id];
+            // Verificar si el jugador ya había contestado correctamente (con su ID anterior)
+            const hadAnswered = game.answeredCorrectly.has(existingPlayer.id);
+            
+            // Solo actualizar si el socket ID cambió
+            if (existingPlayer.id !== socket.id) {
+                // Asignar el nuevo socket ID al jugador existente
+                game.players[socket.id] = { 
+                    ...existingPlayer, 
+                    id: socket.id 
+                };
+                // Eliminar la entrada antigua con el ID anterior
+                delete game.players[existingPlayer.id];
+                
+                // Si había contestado, actualizar el Set con el nuevo socket ID
+                if (hadAnswered) {
+                    game.answeredCorrectly.delete(existingPlayer.id);
+                    game.answeredCorrectly.add(socket.id);
+                }
+            }
     
             socket.join(game.code);
             
-            // Enviar al jugador reconectado el estado actual
+            // Verificar si este jugador ya contestó correctamente en la ronda actual
+            const hasAnswered = game.answeredCorrectly.has(socket.id);
+            
+            // Enviar al jugador reconectado el estado actual completo
             io.to(socket.id).emit('rejoined_game', { 
                 code: game.code, 
                 players: Object.values(game.players),
                 state: game.state,
-                isHost: false
+                isHost: false,
+                hasAnswered: hasAnswered,
+                currentSong: game.currentSong,
+                correctAnswer: game.correctAnswer,
+                mode: game.mode
             });
+            
+            console.log(`[${new Date().toLocaleTimeString()}] RECONEXION INFO: ${name} [${code}] yaContesto=${hasAnswered} cancionActual=${!!game.currentSong}`);
             
             // Solo actualizar la lista de jugadores para todos (sin cambiar pantallas)
             // No usar player_joined porque hace que vuelvan al lobby
@@ -174,7 +201,8 @@ io.on('connection', (socket) => {
     
         // Si la partida ya comenzó y no es una reconexión, no permitir la entrada
         if (game.state !== 'waiting') {
-            io.to(socket.id).emit('join_failed', 'La partida ya ha comenzado.');
+            console.log(`[${new Date().toLocaleTimeString()}] FALLO: ${name} intenta unirse a partida en curso [${code}] - jugador no reconocido`);
+            io.to(socket.id).emit('join_failed', 'La partida ya ha comenzado y no se te reconoce como jugador existente. Verifica que escribiste bien tu nombre.');
             return;
         }
     
@@ -278,9 +306,16 @@ io.on('connection', (socket) => {
 
     socket.on('submit_answer', (answer) => {
         const game = findGameByPlayerId(socket.id);
+        console.log(`[${new Date().toLocaleTimeString()}] RESPUESTA RECIBIDA: socket=${socket.id} | respuesta="${answer}" | juego_encontrado=${!!game} | cancion_actual=${game?.currentSong?.title || 'ninguna'}`);
+        
         if (game && game.currentSong) {
             const player = game.players[socket.id];
-            if (!player) return;
+            console.log(`[${new Date().toLocaleTimeString()}] VALIDACION: jugador_encontrado=${!!player} | nombre=${player?.name || 'N/A'} | ya_contesto=${game.answeredCorrectly.has(socket.id)}`);
+            
+            if (!player) {
+                console.log(`[${new Date().toLocaleTimeString()}] ERROR: Jugador no encontrado en game.players | socket=${socket.id}`);
+                return;
+            }
 
             if (game.answeredCorrectly.has(socket.id)) {
                 io.to(socket.id).emit('already_answered'); 

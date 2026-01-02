@@ -313,6 +313,8 @@ socket.on('game_created', (data) => {
 socket.on('rejoined_game', (data) => {
     myGameCode = data.code;
     isHost = data.isHost || false;
+    reconnectionAttempts = 0; // Reset intentos en reconexión exitosa
+    console.log(`[RECONEXION EXITOSA] Reingresado a [${myGameCode}] como ${isHost ? 'anfitrión' : 'jugador'}`);
     
     // Si la partida ya ha comenzado
     if (data.state === 'playing') {
@@ -335,11 +337,19 @@ socket.on('rejoined_game', (data) => {
             hostControls.style.display = 'none';
             hostAudioContainer.style.display = 'none';
             playerAudioContainer.style.display = 'block';
-            answerInput.style.display = 'block';
-            submitBtn.style.display = 'block';
-            answerInput.disabled = false;
-            submitBtn.disabled = false;
-            showFeedback(`Te has reconectado a la partida ${myGameCode}.`);
+            
+            // Verificar si ya contestó correctamente
+            if (data.hasAnswered) {
+                answerInput.style.display = 'none';
+                submitBtn.style.display = 'none';
+                showFeedback(`Te has reconectado a la partida ${myGameCode}. Ya contestaste correctamente esta ronda.`);
+            } else {
+                answerInput.style.display = 'block';
+                submitBtn.style.display = 'block';
+                answerInput.disabled = false;
+                submitBtn.disabled = false;
+                showFeedback(`Te has reconectado a la partida ${myGameCode}.`);
+            }
         }
     } else { // Si la partida aún está en el lobby
         showScreen(gameLobby);
@@ -376,6 +386,8 @@ socket.on('players_updated', (players) => {
 });
 
 socket.on('join_failed', (message) => {
+    console.log(`[ERROR UNION] ${message}`);
+    reconnectionAttempts = 0; // Reset intentos en fallo
     if (joinStatus) {
         joinStatus.textContent = message;
     }
@@ -414,8 +426,20 @@ socket.on('play_audio', (data) => {
     const audioFilePath = `/audio/${data.file}`;
     const duration = data.duration === 'full' ? 9999 : data.duration;
 
+    console.log(`[AUDIO] Reproduciendo: ${data.file} por ${duration}s`);
+    
     hostAudioPlayer.src = audioFilePath;
-    hostAudioPlayer.play();
+    
+    // Manejar error si el archivo no existe
+    hostAudioPlayer.onerror = () => {
+        console.error(`[AUDIO ERROR] No se pudo cargar: ${audioFilePath}`);
+        showFeedback(`Error: No se encontró el archivo de audio`);
+    };
+    
+    hostAudioPlayer.play().catch(err => {
+        console.error('[AUDIO ERROR] Error al reproducir:', err);
+        showFeedback('Error al reproducir audio');
+    });
     
     if (data.duration !== 'full') {
         setTimeout(() => {
@@ -465,6 +489,12 @@ socket.on('correct_answer', (data) => {
 });
 
 socket.on('round_ended', (data) => {
+    // Pausar audio si está sonando
+    if (hostAudioPlayer) {
+        hostAudioPlayer.pause();
+        hostAudioPlayer.currentTime = 0;
+    }
+    
     if (isHost) {
         showFeedback(`Nadie adivinó. La canción era: "${data.answer}"`);
         startBtn.style.display = 'none';
@@ -481,6 +511,12 @@ socket.on('round_ended', (data) => {
 });
 
 socket.on('round_summary', (data) => {
+    // Pausar audio si está sonando
+    if (hostAudioPlayer) {
+        hostAudioPlayer.pause();
+        hostAudioPlayer.currentTime = 0;
+    }
+    
     if (isHost) {
         showFeedback(`¡Alguien adivinó! La canción era: "${data.answer}"`);
         startBtn.style.display = 'none';
@@ -520,6 +556,12 @@ socket.on('already_answered', () => {
 });
 
 socket.on('game_ended', (data) => {
+    // Pausar audio si está sonando
+    if (hostAudioPlayer) {
+        hostAudioPlayer.pause();
+        hostAudioPlayer.currentTime = 0;
+    }
+    
     showFeedback('¡La partida ha terminado!');
     const sortedPlayers = data.players.sort((a, b) => b.score - a.score);
     finalScoresList.innerHTML = '';
@@ -561,11 +603,16 @@ window.addEventListener('DOMContentLoaded', () => {
 function initializeHeartbeat() {
     // Enviar ping cada 15 segundos (más espaciado)
     pingInterval = setInterval(() => {
-        socket.emit('ping');
+        if (socket.connected) {
+            socket.emit('ping');
+        } else {
+            console.log('[HEARTBEAT] Socket desconectado, intentando reconectar...');
+            handleReconnection();
+        }
         
         // Verificar si han pasado más de 60 segundos sin pong
         if (Date.now() - lastPongTime > 60000) {
-            console.log('Conexión perdida, intentando reconectar...');
+            console.log('[HEARTBEAT] No se recibió pong en 60s, reconectando...');
             handleReconnection();
         }
     }, 15000); // Cambiar de 5s a 15s
@@ -579,26 +626,48 @@ socket.on('pong', () => {
 
 // Manejar cambios de visibilidad de la página
 function initializeVisibilityHandler() {
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            console.log('Página oculta, manteniendo conexión...');
-        } else {
-            console.log('Página visible, verificando conexión...');
-            // Enviar un ping inmediatamente al volver
-            socket.emit('ping');
+    let wasHidden = false;
+    
+    const handleVisibilityChange = () => {
+        const isHidden = document.hidden || document.visibilityState === 'hidden';
+        
+        if (isHidden) {
+            wasHidden = true;
+            console.log('[VISIBILIDAD] Página oculta, manteniendo conexión...');
+        } else if (wasHidden) {
+            wasHidden = false;
+            console.log('[VISIBILIDAD] Página visible de nuevo, verificando conexión...');
             
-            // Si hay un juego activo, verificar el estado
-            if (myGameCode) {
-                if (isHost) {
-                    console.log(`Anfitrión volviendo, reconectando a partida ${myGameCode}`);
-                    socket.emit('rejoin_as_host', { code: myGameCode });
-                } else if (playerName) {
-                    console.log(`Jugador volviendo, reconectando a partida ${myGameCode}`);
-                    socket.emit('join_game', { name: playerName, code: myGameCode });
+            // Dar un momento para que la conexión se restablezca
+            setTimeout(() => {
+                // Enviar ping para verificar conexión
+                if (socket.connected) {
+                    console.log('[VISIBILIDAD] Socket conectado, enviando ping...');
+                    socket.emit('ping');
+                } else {
+                    console.log('[VISIBILIDAD] Socket desconectado, reconectando...');
+                    handleReconnection();
                 }
-            }
+                
+                // Si hay un juego activo, verificar el estado
+                if (myGameCode && socket.connected) {
+                    if (isHost) {
+                        console.log(`[VISIBILIDAD] Anfitrión volviendo, verificando partida [${myGameCode}]`);
+                        socket.emit('rejoin_as_host', { code: myGameCode });
+                    } else if (playerName) {
+                        console.log(`[VISIBILIDAD] Jugador volviendo, verificando partida [${myGameCode}]`);
+                        socket.emit('join_game', { name: playerName, code: myGameCode });
+                    }
+                }
+            }, 500);
         }
-    });
+    };
+    
+    // Múltiples eventos para diferentes navegadores móviles
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('resume', handleVisibilityChange); // Cordova/PhoneGap
+    window.addEventListener('focus', handleVisibilityChange);
+    window.addEventListener('pageshow', handleVisibilityChange);
 }
 
 // Función para manejar reconexión

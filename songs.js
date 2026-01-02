@@ -65,7 +65,7 @@ const songs = [
     { title: 'Brujeri­a', artist: 'Los Tipitos', file: 'los_tipitos_brujeria.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'Blank Space', artist: 'Taylor Swift', file: 'taylor_swift_blank_space.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'Look What You Made Me Do', artist: 'Taylor Swift', file: 'taylor_swift_look_what_you_made_me_do.mp3', fragmentDurations: [3, 5, 7, 10]},
-    { title: 'Shake It Off', artist: 'Taylor Swift', file: 'taylor_swift_shake_it_off.mp3', fragmentDurations: [3, 5, 7, 10]},
+    // { title: 'Shake It Off', artist: 'Taylor Swift', file: 'taylor_swift_shake_it_off.mp3', fragmentDurations: [3, 5, 7, 10]}, // ARCHIVO FALTANTE
 
     { title: 'CAN’T STOP THE FEELING', artist: 'Justin Timberlake', file: 'justin_timberlake_cant_stop_the_feeling.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'Drag Me Down', artist: 'One Direction', file: 'one_direction_drag_me_down.mp3', fragmentDurations: [3, 5, 7, 10]},
@@ -85,7 +85,7 @@ const songs = [
     { title: 'Rude', artist: 'MAGIC!', file: 'magic_rude.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'Beautiful Things', artist: 'Benson Boone', file: 'benson_boone_beautiful_things.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'What Makes You Beautiful', artist: 'One Direction', file: 'one_direction_what_makes_you_beautiful.mp3', fragmentDurations: [3, 5, 7, 10]},
-    { title: 'Old Town Road', artist: 'Lil Nas', file: 'lil_nas_old_town_road .mp3', fragmentDurations: [3, 5, 7, 10]},
+    { title: 'Old Town Road', artist: 'Lil Nas', file: 'lil_nas_old_town_road.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'See You Again', artist: 'Wiz Khalifa', file: 'wiz_khalifa_see_you_again.mp3', fragmentDurations: [3, 5, 7, 10]},
     { title: 'God’s Plan', artist: 'Drake', file: 'drake_gods_plan.mp3', fragmentDurations: [3, 5, 7, 10]},
 
